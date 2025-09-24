@@ -11,7 +11,7 @@ st.set_page_config(
 
 # Title
 st.title("US GAO Antifraud Resource Test Page")
-st.markdown("Search and explore concepts, instances, and relationships in your ontology")
+st.markdown("Search and explore fraud concepts, instances, and relationships in the GAO's Conceptual Fraud Model")
 
 # Sidebar for ontology selection
 st.sidebar.header("Ontology Management")
@@ -71,7 +71,7 @@ if uploaded_file is not None and uploaded_file != st.session_state.loaded_file:
 # Main interface
 if st.session_state.ontology:
     st.header("Fraud Activity Search")
-    st.markdown("Search for Federal Fraud Schemes related to specific fraud activities using advanced SPARQL queries.")
+    st.markdown("Search for Federal Fraud Schemes related to specific fraud activities.")
     
     # Fraud activity mapping: Display Label -> Class URI
     fraud_activity_mapping = {
@@ -193,7 +193,7 @@ if st.session_state.ontology:
                                 
                                 # Could add more details here if needed
                                 st.markdown("---")
-                                st.caption("Found using advanced SPARQL query with transitive closure")
+                                st.caption("Found using SPARQL query with transitive closure")
                     else:
                         st.info(f"No Federal Fraud Schemes found for {fraud_activity_label}")
                         
@@ -212,17 +212,16 @@ else:
     st.markdown("""
     **What this interface provides:**
     
-    1. **Fraud Activity Search**: Find Federal Fraud Schemes using advanced SPARQL queries
+    1. **Fraud Activity Search**: Find Federal Fraud Schemes using SPARQL queries
     
     **Supported formats**: OWL, RDF, TTL, N3, JSON-LD
     
     **Next steps**:
     - Upload your ontology file using the sidebar
-    - Use the Fraud Activity Search to find related schemes
-    - Use Jupyter Lab (accessible at http://localhost:8888) for advanced editing
+    - Use the Fraud Activity Search to find related fraud schemes
     
     **How it works**:
-    - Uses sophisticated SPARQL queries with transitive closure
-    - Finds both direct and indirect relationships through class hierarchies
+    - Finds both direct and indirect relationships through class hierarchies and property chains
     - Captures complex OWL restrictions and property relationships
     """)
+
