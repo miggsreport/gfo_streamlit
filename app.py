@@ -30,6 +30,26 @@ if 'ontology' not in st.session_state:
 if 'loaded_file' not in st.session_state:
     st.session_state.loaded_file = None
 
+# Load ontology function using rdflib
+@st.cache_resource
+def load_ontology_rdflib(file_path):
+    try:
+        g = rdflib.Graph()
+        # Determine format based on file extension
+        if file_path.endswith('.ttl'):
+            g.parse(file_path, format="turtle")
+        elif file_path.endswith('.rdf') or file_path.endswith('.xml'):
+            g.parse(file_path, format="xml")
+        elif file_path.endswith('.jsonld'):
+            g.parse(file_path, format="json-ld")
+        else:
+            # Try to auto-detect
+            g.parse(file_path)
+        return g
+    except Exception as e:
+        st.error(f"Error loading ontology: {str(e)}")
+        return None
+
 # Add this function after your session state initialization
 def load_default_ontology():
     """Load GFO ontology from repository if available"""
@@ -54,26 +74,6 @@ def load_default_ontology():
 # Auto-load default ontology on first run
 if st.session_state.ontology is None:
     load_default_ontology()
-
-# Load ontology function using rdflib
-@st.cache_resource
-def load_ontology_rdflib(file_path):
-    try:
-        g = rdflib.Graph()
-        # Determine format based on file extension
-        if file_path.endswith('.ttl'):
-            g.parse(file_path, format="turtle")
-        elif file_path.endswith('.rdf') or file_path.endswith('.xml'):
-            g.parse(file_path, format="xml")
-        elif file_path.endswith('.jsonld'):
-            g.parse(file_path, format="json-ld")
-        else:
-            # Try to auto-detect
-            g.parse(file_path)
-        return g
-    except Exception as e:
-        st.error(f"Error loading ontology: {str(e)}")
-        return None
 
 # Handle file upload
 if uploaded_file is not None and uploaded_file != st.session_state.loaded_file:
@@ -235,3 +235,4 @@ else:
     - Finds both direct and indirect relationships through class hierarchies
     - Captures complex OWL restrictions and property relationships
     """)
+
