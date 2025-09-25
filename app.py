@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import rdflib
 from pathlib import Path
@@ -11,7 +12,7 @@ st.set_page_config(
 
 # Title
 st.title("US GAO Antifraud Resource Test Page")
-st.markdown("Search and explore fraud concepts, instances, and relationships in the GAO's Conceptual Fraud Model")
+st.markdown("Search and explore concepts, instances, and relationships in your ontology")
 
 # Sidebar for ontology selection
 st.sidebar.header("Ontology Management")
@@ -28,6 +29,31 @@ if 'ontology' not in st.session_state:
     st.session_state.ontology = None
 if 'loaded_file' not in st.session_state:
     st.session_state.loaded_file = None
+
+# Add this function after your session state initialization
+def load_default_ontology():
+    """Load GFO ontology from repository if available"""
+    default_ontology_path = "gfo_turtle.ttl"  # Same directory as app.py
+    
+    if os.path.exists(default_ontology_path):
+        try:
+            with st.spinner("Loading GFO ontology from repository..."):
+                st.session_state.ontology = load_ontology_rdflib(default_ontology_path)
+                st.session_state.loaded_file = "gfo_turtle.ttl (default)"
+                st.session_state.uploaded_file_path = default_ontology_path
+                
+                if st.session_state.ontology:
+                    triple_count = len(st.session_state.ontology)
+                    st.sidebar.success(f"[OK] Auto-loaded: gfo_turtle.ttl")
+                    st.sidebar.info(f"Triples: {triple_count}")
+                    return True
+        except Exception as e:
+            st.sidebar.error(f"[ERROR] Failed to auto-load default ontology: {str(e)}")
+    return False
+
+# Auto-load default ontology on first run
+if st.session_state.ontology is None:
+    load_default_ontology()
 
 # Load ontology function using rdflib
 @st.cache_resource
@@ -71,46 +97,29 @@ if uploaded_file is not None and uploaded_file != st.session_state.loaded_file:
 # Main interface
 if st.session_state.ontology:
     st.header("Fraud Activity Search")
-    st.markdown("Search for Federal Fraud Schemes related to specific fraud activities.")
+    st.markdown("Search for Federal Fraud Schemes related to specific fraud activities using advanced SPARQL queries.")
     
     # Fraud activity mapping: Display Label -> Class URI
     fraud_activity_mapping = {
-        "Beneficiary fraud": "BeneficiaryFraud",
-        "Cellphone fraud": "CellphoneFraud",
-        "Charity fraud": "CharityFraud",
-        "Confidence fraud": "ConfidenceFraud",
-        "Consumer fraud": "ConsumerFraud",
-        "Corporate fraud": "CorporateFraud",
+        "Public Emergency Fraud": "public_emergency_fraud",
+        "Identity Fraud": "IdentityFraud",
+        "Healthcare Fraud": "HealthcareFraud", 
+        "Tax Fraud": "TaxFraud",
+        "Procurement Fraud": "ProcurementFraud",
+        "Investment Fraud": "InvestmentFraud",
+        "Wire Fraud": "WireFraud",
+        "Mail Fraud": "MailFraud",
+        "Financial Institution Fraud": "FinancialInstitutionFraud",
+        "Corporate Fraud": "CorporateFraud",
+        "Contract Fraud": "ContractFraud",
+        "Grant Fraud": "GrantFraud",
+        "Housing Fraud": "HousingFraud",
+        "Insurance Fraud": "InsuranceFraud",
+        "Loan Fraud": "LoanFraud",
+        "Student Financial Aid Fraud": "StudentFinancialAidFraud",
         "Corruption": "Corruption",
-        "Cyber espionage": "CyberEspionage",
-        "Cyberextortion": "Cyberextortion",
-        "Environmental fraud": "EnvironmentalFraud",
-        "Federal contract fraud": "ContractFraud",
-        "Financial institution fraud": "FinancialInstitutionFraud",
-        "Government furnished equipment fraud": "GovernmentFurnishedEquipmentFraud",
-        "Grant fraud": "GrantFraud",
-        "Healthcare fraud": "HealthcareFraud",
-        "Housing fraud": "HousingFraud",
-        "Identity fraud": "IdentityFraud",
-        "Insurance fraud": "InsuranceFraud",
-        "Investment fraud": "InvestmentFraud",
-        "Laboratory fraud": "LaboratoryFraud",
-        "Lien filing fraud": "LienFillingFraud",
-        "Loan fraud": "LoanFraud",
-        "Mail fraud": "MailFraud",
-        "Media manipulation": "MediaManipulation",
-        "Payment fraud": "PaymentFraud",
-        "Procurement fraud": "ProcurementFraud",
-        "Public assistance fraud": "AssistanceFraud",
-        "Public emergency fraud": "public_emergency_fraud",
-        "Sanction evasion fraud": "SanctionEvasion",
-        "Student financial aid fraud": "StudentFinancialAidFraud",
-        "Supervised release": "supervised_release",
-        "Tax fraud": "TaxFraud",
-        "Trafficking": "Trafficking",
-        "Visa fraud": "VisaFraud",
-        "Wire fraud": "WireFraud",
-        "Workplace fraud": "WorkplaceFraud"
+        "Cyber Espionage": "CyberEspionage",
+        "Cyberextortion": "Cyberextortion"
     }
     
     # Fraud activity selection
@@ -193,7 +202,7 @@ if st.session_state.ontology:
                                 
                                 # Could add more details here if needed
                                 st.markdown("---")
-                                st.caption("Found using SPARQL query with transitive closure")
+                                st.caption("Found using advanced SPARQL query with transitive closure")
                     else:
                         st.info(f"No Federal Fraud Schemes found for {fraud_activity_label}")
                         
@@ -212,16 +221,17 @@ else:
     st.markdown("""
     **What this interface provides:**
     
-    1. **Fraud Activity Search**: Find Federal Fraud Schemes using SPARQL queries
+    1. **Fraud Activity Search**: Find Federal Fraud Schemes using advanced SPARQL queries
     
     **Supported formats**: OWL, RDF, TTL, N3, JSON-LD
     
     **Next steps**:
     - Upload your ontology file using the sidebar
-    - Use the Fraud Activity Search to find related fraud schemes
+    - Use the Fraud Activity Search to find related schemes
+    - Use Jupyter Lab (accessible at http://localhost:8888) for advanced editing
     
     **How it works**:
-    - Finds both direct and indirect relationships through class hierarchies and property chains
+    - Uses sophisticated SPARQL queries with transitive closure
+    - Finds both direct and indirect relationships through class hierarchies
     - Captures complex OWL restrictions and property relationships
     """)
-
