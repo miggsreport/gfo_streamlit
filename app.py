@@ -1,6 +1,6 @@
-import os
 import streamlit as st
 import rdflib
+import os
 from pathlib import Path
 import pandas as pd
 
@@ -12,7 +12,7 @@ st.set_page_config(
 
 # Title
 st.title("US GAO Antifraud Resource Test Page")
-st.markdown("Search and explore concepts, instances, and relationships in your ontology")
+st.markdown("Search and explore fraud concepts, instances, and relationships in the GAO's Conceptual Fraud Model")
 
 # Sidebar for ontology selection
 st.sidebar.header("Ontology Management")
@@ -50,10 +50,9 @@ def load_ontology_rdflib(file_path):
         st.error(f"Error loading ontology: {str(e)}")
         return None
 
-# Add this function after your session state initialization
 def load_default_ontology():
     """Load GFO ontology from repository if available"""
-    default_ontology_path = "gfo_turtle.ttl"  # Same directory as app.py
+    default_ontology_path = "gfo_turtle.ttl"
     
     if os.path.exists(default_ontology_path):
         try:
@@ -74,6 +73,7 @@ def load_default_ontology():
 # Auto-load default ontology on first run
 if st.session_state.ontology is None:
     load_default_ontology()
+
 
 # Handle file upload
 if uploaded_file is not None and uploaded_file != st.session_state.loaded_file:
@@ -97,29 +97,46 @@ if uploaded_file is not None and uploaded_file != st.session_state.loaded_file:
 # Main interface
 if st.session_state.ontology:
     st.header("Fraud Activity Search")
-    st.markdown("Search for Federal Fraud Schemes related to specific fraud activities using advanced SPARQL queries.")
+    st.markdown("Search for Federal Fraud Schemes related to specific fraud activities.")
     
     # Fraud activity mapping: Display Label -> Class URI
     fraud_activity_mapping = {
-        "Public Emergency Fraud": "public_emergency_fraud",
-        "Identity Fraud": "IdentityFraud",
-        "Healthcare Fraud": "HealthcareFraud", 
-        "Tax Fraud": "TaxFraud",
-        "Procurement Fraud": "ProcurementFraud",
-        "Investment Fraud": "InvestmentFraud",
-        "Wire Fraud": "WireFraud",
-        "Mail Fraud": "MailFraud",
-        "Financial Institution Fraud": "FinancialInstitutionFraud",
-        "Corporate Fraud": "CorporateFraud",
-        "Contract Fraud": "ContractFraud",
-        "Grant Fraud": "GrantFraud",
-        "Housing Fraud": "HousingFraud",
-        "Insurance Fraud": "InsuranceFraud",
-        "Loan Fraud": "LoanFraud",
-        "Student Financial Aid Fraud": "StudentFinancialAidFraud",
+        "Beneficiary fraud": "BeneficiaryFraud",
+        "Cellphone fraud": "CellphoneFraud",
+        "Charity fraud": "CharityFraud",
+        "Confidence fraud": "ConfidenceFraud",
+        "Consumer fraud": "ConsumerFraud",
+        "Corporate fraud": "CorporateFraud",
         "Corruption": "Corruption",
-        "Cyber Espionage": "CyberEspionage",
-        "Cyberextortion": "Cyberextortion"
+        "Cyber espionage": "CyberEspionage",
+        "Cyberextortion": "Cyberextortion",
+        "Environmental fraud": "EnvironmentalFraud",
+        "Federal contract fraud": "ContractFraud",
+        "Financial institution fraud": "FinancialInstitutionFraud",
+        "Government furnished equipment fraud": "GovernmentFurnishedEquipmentFraud",
+        "Grant fraud": "GrantFraud",
+        "Healthcare fraud": "HealthcareFraud",
+        "Housing fraud": "HousingFraud",
+        "Identity fraud": "IdentityFraud",
+        "Insurance fraud": "InsuranceFraud",
+        "Investment fraud": "InvestmentFraud",
+        "Laboratory fraud": "LaboratoryFraud",
+        "Lien filing fraud": "LienFillingFraud",
+        "Loan fraud": "LoanFraud",
+        "Mail fraud": "MailFraud",
+        "Media manipulation": "MediaManipulation",
+        "Payment fraud": "PaymentFraud",
+        "Procurement fraud": "ProcurementFraud",
+        "Public assistance fraud": "AssistanceFraud",
+        "Public emergency fraud": "public_emergency_fraud",
+        "Sanction evasion fraud": "SanctionEvasion",
+        "Student financial aid fraud": "StudentFinancialAidFraud",
+        "Supervised release": "supervised_release",
+        "Tax fraud": "TaxFraud",
+        "Trafficking": "Trafficking",
+        "Visa fraud": "VisaFraud",
+        "Wire fraud": "WireFraud",
+        "Workplace fraud": "WorkplaceFraud"
     }
     
     # Fraud activity selection
@@ -202,7 +219,7 @@ if st.session_state.ontology:
                                 
                                 # Could add more details here if needed
                                 st.markdown("---")
-                                st.caption("Found using advanced SPARQL query with transitive closure")
+                                st.caption("Found using SPARQL query with transitive closure")
                     else:
                         st.info(f"No Federal Fraud Schemes found for {fraud_activity_label}")
                         
@@ -221,18 +238,15 @@ else:
     st.markdown("""
     **What this interface provides:**
     
-    1. **Fraud Activity Search**: Find Federal Fraud Schemes using advanced SPARQL queries
+    1. **Fraud Activity Search**: Find Federal Fraud Schemes using SPARQL queries
     
     **Supported formats**: OWL, RDF, TTL, N3, JSON-LD
     
     **Next steps**:
     - Upload your ontology file using the sidebar
-    - Use the Fraud Activity Search to find related schemes
-    - Use Jupyter Lab (accessible at http://localhost:8888) for advanced editing
+    - Use the Fraud Activity Search to find related fraud schemes
     
     **How it works**:
-    - Uses sophisticated SPARQL queries with transitive closure
-    - Finds both direct and indirect relationships through class hierarchies
+    - Finds both direct and indirect relationships through class hierarchies and property chains
     - Captures complex OWL restrictions and property relationships
     """)
-
