@@ -189,7 +189,7 @@ ORDER BY ?individualName
                         
                         # Display results in expandable cards
                         for i, row in enumerate(results):
-    scheme_name = str(row.individualName)
+                        scheme_name = str(row.individualName)
     
     # Extract the new properties (with fallbacks)
     fraud_description = str(row.description) if row.description else "No description available"
@@ -249,4 +249,5 @@ else:
     - Finds both direct and indirect relationships through class hierarchies and property chains
     - Captures complex OWL restrictions and property relationships
     """)
+
 
