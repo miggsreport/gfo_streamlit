@@ -224,7 +224,11 @@ ORDER BY ?individualName
                             
                             with st.expander(f"{i+1}. {scheme_name}"):
                                 st.write(f"**Fraud Description:** {fraud_description}")
-                                st.write(f"**Fraud Narrative:** {fraud_narrative_uri}")
+                                
+                                # Use st.text() for fraud narrative to avoid markdown interpretation of $ symbols
+                                st.write("**Fraud Narrative:**")
+                                st.text(fraud_narrative_uri)
+                                
                                 st.write(f"**Related to:** {fraud_activity_label}")
                                 
                                 # Could add more details here if needed
