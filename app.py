@@ -1,6 +1,5 @@
 import streamlit as st
 import rdflib
-import os
 from pathlib import Path
 import pandas as pd
 
@@ -49,31 +48,6 @@ def load_ontology_rdflib(file_path):
     except Exception as e:
         st.error(f"Error loading ontology: {str(e)}")
         return None
-
-def load_default_ontology():
-    """Load GFO ontology from repository if available"""
-    default_ontology_path = "gfo_turtle.ttl"
-    
-    if os.path.exists(default_ontology_path):
-        try:
-            with st.spinner("Loading GFO ontology from repository..."):
-                st.session_state.ontology = load_ontology_rdflib(default_ontology_path)
-                st.session_state.loaded_file = "gfo_turtle.ttl (default)"
-                st.session_state.uploaded_file_path = default_ontology_path
-                
-                if st.session_state.ontology:
-                    triple_count = len(st.session_state.ontology)
-                    st.sidebar.success(f"[OK] Auto-loaded: gfo_turtle.ttl")
-                    st.sidebar.info(f"Triples: {triple_count}")
-                    return True
-        except Exception as e:
-            st.sidebar.error(f"[ERROR] Failed to auto-load default ontology: {str(e)}")
-    return False
-
-# Auto-load default ontology on first run
-if st.session_state.ontology is None:
-    load_default_ontology()
-
 
 # Handle file upload
 if uploaded_file is not None and uploaded_file != st.session_state.loaded_file:
@@ -153,42 +127,48 @@ if st.session_state.ontology:
         if fraud_activity_label and fraud_activity:
             # SPARQL query using the user's working approach
             sparql_query = f"""
-            PREFIX gfo: <https://gaoinnovations.gov/antifraud_resource/howfraudworks/gfo/>
-            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            PREFIX owl: <http://www.w3.org/2002/07/owl#>
-             
-            SELECT DISTINCT ?individual ?individualName
-            WHERE {{
-                ?individual a gfo:FederalFraudScheme ;
-                            rdfs:label ?individualName .
-               
-                {{
-                    # Path 1: Through involves property
-                    ?individual a ?someClass .
-                    ?someClass owl:onProperty gfo:involves ;
-                               owl:someValuesFrom ?specificFraud .
-                   
-                    ?specificFraud rdfs:subClassOf* ?fraudType .
-                    ?fraudType rdfs:label ?fraudTypeName .
-                   
-                    ?specificFraud rdfs:subClassOf* gfo:{fraud_activity} .
-                }}
-                UNION
-                {{
-                    # Path 2: Direct instance of subclass
-                    ?individual a ?fraudSchemeClass .
-                    ?fraudSchemeClass rdfs:subClassOf* gfo:{fraud_activity} .
-                    ?fraudSchemeClass rdfs:subClassOf* ?fraudType .
-                    ?fraudType rdfs:label ?fraudTypeName .
-                   
-                    FILTER(?fraudSchemeClass != gfo:FederalFraudScheme)
-                }}
-                
-                # Filter out the top-level FraudActivity class
-                FILTER(?fraudType != gfo:FraudActivity)
-            }}
-            ORDER BY ?individualName
-            """
+PREFIX gfo: <https://gaoinnovations.gov/antifraud_resource/howfraudworks/gfo/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+ 
+SELECT DISTINCT ?individual ?individualName ?description ?fraudNarrative ?isDefinedBy
+WHERE {{
+    ?individual a gfo:FederalFraudScheme ;
+                rdfs:label ?individualName .
+   
+    # Get additional properties
+    OPTIONAL {{ ?individual dcterms:description ?description . }}
+    OPTIONAL {{ ?individual gfo:fraudNarrative ?fraudNarrative . }}
+    OPTIONAL {{ ?individual rdfs:isDefinedBy ?isDefinedBy . }}
+   
+    {{
+        # Path 1: Through involves property
+        ?individual a ?someClass .
+        ?someClass owl:onProperty gfo:involves ;
+                   owl:someValuesFrom ?specificFraud .
+       
+        ?specificFraud rdfs:subClassOf* ?fraudType .
+        ?fraudType rdfs:label ?fraudTypeName .
+       
+        ?specificFraud rdfs:subClassOf* gfo:{fraud_activity} .
+    }}
+    UNION
+    {{
+        # Path 2: Direct instance of subclass
+        ?individual a ?fraudSchemeClass .
+        ?fraudSchemeClass rdfs:subClassOf* gfo:{fraud_activity} .
+        ?fraudSchemeClass rdfs:subClassOf* ?fraudType .
+        ?fraudType rdfs:label ?fraudTypeName .
+       
+        FILTER(?fraudSchemeClass != gfo:FederalFraudScheme)
+    }}
+    
+    # Filter out the top-level FraudActivity class
+    FILTER(?fraudType != gfo:FraudActivity)
+}}
+ORDER BY ?individualName
+"""
             
             try:
                 # Execute SPARQL query using rdflib
@@ -209,17 +189,21 @@ if st.session_state.ontology:
                         
                         # Display results in expandable cards
                         for i, row in enumerate(results):
-                            scheme_name = str(row.individualName)
-                            scheme_uri = str(row.individual)
-                            
-                            with st.expander(f"{i+1}. {scheme_name}"):
-                                st.write(f"**Full Name:** {scheme_name}")
-                                st.write(f"**URI:** {scheme_uri.split('/')[-1]}")
-                                st.write(f"**Related to:** {fraud_activity_label}")
-                                
-                                # Could add more details here if needed
-                                st.markdown("---")
-                                st.caption("Found using SPARQL query with transitive closure")
+    scheme_name = str(row.individualName)
+    
+    # Extract the new properties (with fallbacks)
+    fraud_description = str(row.description) if row.description else "No description available"
+    fraud_narrative_uri = str(row.fraudNarrative) if row.fraudNarrative else "No fraud narrative available"
+    is_defined_by_url = str(row.isDefinedBy) if row.isDefinedBy else "No definition source available"
+    
+    with st.expander(f"{i+1}. {scheme_name}"):
+        st.write(f"**Fraud Description:** {fraud_description}")
+        st.write(f"**Fraud Narrative:** {fraud_narrative_uri}")
+        st.write(f"**Related to:** {fraud_activity_label}")
+        
+        # Could add more details here if needed
+        st.markdown("---")
+        st.caption(f"Source: {is_defined_by_url}")
                     else:
                         st.info(f"No Federal Fraud Schemes found for {fraud_activity_label}")
                         
