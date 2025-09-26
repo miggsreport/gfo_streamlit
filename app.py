@@ -2,6 +2,7 @@ import streamlit as st
 import rdflib
 from pathlib import Path
 import pandas as pd
+import os
 
 # Set page config
 st.set_page_config(
@@ -48,6 +49,31 @@ def load_ontology_rdflib(file_path):
     except Exception as e:
         st.error(f"Error loading ontology: {str(e)}")
         return None
+
+# Auto-load default ontology function
+def load_default_ontology():
+    """Load GFO ontology from repository if available"""
+    default_ontology_path = "gfo_turtle.ttl"
+    
+    if os.path.exists(default_ontology_path):
+        try:
+            with st.spinner("Loading GFO ontology from repository..."):
+                st.session_state.ontology = load_ontology_rdflib(default_ontology_path)
+                st.session_state.loaded_file = "gfo_turtle.ttl (default)"
+                st.session_state.uploaded_file_path = default_ontology_path
+                
+                if st.session_state.ontology:
+                    triple_count = len(st.session_state.ontology)
+                    st.sidebar.success(f"[OK] Auto-loaded: gfo_turtle.ttl")
+                    st.sidebar.info(f"Triples: {triple_count}")
+                    return True
+        except Exception as e:
+            st.sidebar.error(f"[ERROR] Failed to auto-load default ontology: {str(e)}")
+    return False
+
+# Auto-load default ontology on first run
+if st.session_state.ontology is None:
+    load_default_ontology()
 
 # Handle file upload
 if uploaded_file is not None and uploaded_file != st.session_state.loaded_file:
