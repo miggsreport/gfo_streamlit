@@ -200,10 +200,25 @@ ORDER BY ?individualName
         st.write(f"**Fraud Description:** {fraud_description}")
         st.write(f"**Fraud Narrative:** {fraud_narrative_uri}")
         st.write(f"**Related to:** {fraud_activity_label}")
+
+    # Display results in expandable cards
+    for i, row in enumerate(results):
+    scheme_name = str(row.individualName)
+    
+    # Extract the new properties (with fallbacks)
+    fraud_description = str(row.description) if row.description else "No description available"
+    fraud_narrative_uri = str(row.fraudNarrative) if row.fraudNarrative else "No fraud narrative available"
+    is_defined_by_url = str(row.isDefinedBy) if row.isDefinedBy else "No definition source available"
+    
+    with st.expander(f"{i+1}. {scheme_name}"):
+        st.write(f"**Fraud Description:** {fraud_description}")
+        st.write(f"**Fraud Narrative:** {fraud_narrative_uri}")
+        st.write(f"**Related to:** {fraud_activity_label}")
         
         # Could add more details here if needed
         st.markdown("---")
         st.caption(f"Source: {is_defined_by_url}")
+
                     else:
                         st.info(f"No Federal Fraud Schemes found for {fraud_activity_label}")
                         
@@ -234,3 +249,4 @@ else:
     - Finds both direct and indirect relationships through class hierarchies and property chains
     - Captures complex OWL restrictions and property relationships
     """)
+
